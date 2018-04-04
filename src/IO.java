@@ -19,7 +19,7 @@ public final class IO {
     }
 
     public static void writeImage(BufferedImage image, String filename, String extention) {
-        File file = new File("result/"+filename);
+        File file = new File(filename);
         try {
             ImageIO.write(image, extention, file);
         } catch (IOException e) {
