@@ -1,5 +1,6 @@
 package model;
 
+import model.BlockImage;
 import java.awt.image.BufferedImage;
 
 public class Image {
@@ -13,6 +14,10 @@ public class Image {
 
     public void setBlockSize(int blockSize) {
         this.blockSize = blockSize;
+    }
+
+    public BlockImage getBlockImage(int x, int y) {
+        return this.blockImages[x][y];
     }
 
     public BufferedImage getOriginalImage() {

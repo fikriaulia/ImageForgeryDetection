@@ -1,3 +1,5 @@
+package imageforgerydetection;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -25,5 +27,15 @@ public final class IO {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    
+    public static BufferedImage FileToBufferedImage(File file) {
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return image;
     }
 }

@@ -5,7 +5,9 @@ import java.awt.image.BufferedImage;
 
 public class AutocolorCorrelogram implements Feature {
 
-    private float[][] correlogram;
+    private float[][] correlogramR;
+    private float[][] correlogramG;
+    private float[][] correlogramB;
     private int maxFeatureValue;
     private int[] distanceSet;
 
@@ -18,19 +20,29 @@ public class AutocolorCorrelogram implements Feature {
         this.distanceSet[3] = 4;
     }
 
-    public float[][] getCorrelogram() {
-        return correlogram;
+    public float[][] getCorrelogramR() {
+        return correlogramR;
+    }
+
+    public float[][] getCorrelogramG() {
+        return correlogramG;
+    }
+
+    public float[][] getCorrelogramB() {
+        return correlogramB;
     }
 
     @Override
     public void extract(BufferedImage image) {
-        int[][] img = generateMatrixIntImage(image);
+        int[] histogramR = new int[maxFeatureValue];
+        int[] histogramG = new int[maxFeatureValue];
+        int[] histogramB = new int[maxFeatureValue];
+        this.correlogramR = new float[maxFeatureValue][distanceSet.length];
+        this.correlogramG = new float[maxFeatureValue][distanceSet.length];
+        this.correlogramB = new float[maxFeatureValue][distanceSet.length];
 
-        int[] histogram = new int[maxFeatureValue];
-        this.correlogram = new float[maxFeatureValue][distanceSet.length];
-
-        final int H = img.length;
-        final int W = img[0].length;
+        final int H = image.getHeight();
+        final int W = image.getWidth();
 
         int N_DIST = distanceSet.length;
         for (int di = 0; di < N_DIST; ++di) {
@@ -38,75 +50,87 @@ public class AutocolorCorrelogram implements Feature {
             //for each pixel $p$
             for (int y = 0; y < H; y++) {
                 for (int x = 0; x < W; x++) {
-                    int c = img[x][y];
-                    histogram[c]++;
+                    Color c = new Color(image.getRGB(x,y));
+                    histogramR[c.getRed()]++;
+                    histogramG[c.getGreen()]++;
+                    histogramB[c.getBlue()]++;
 
                     for (int dx = (x - d); dx <= (x+d); dx++) {
                         int dy = y - d;
-                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && img[dy][dx] == c) {
-                            this.correlogram[c][di]++;
+                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && (new Color(image.getRGB(dy, dx)).equals(c))) {
+                            this.correlogramR[c.getRed()][di]++;
+                            this.correlogramG[c.getGreen()][di]++;
+                            this.correlogramB[c.getBlue()][di]++;
                         }
                     }
 
                     for (int dx = (x - d); dx <= (x+d); dx++) {
                         int dy = y + d;
-                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && img[dy][dx] == c) {
-                            this.correlogram[c][di]++;
+                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && (new Color(image.getRGB(dy, dx)).equals(c))) {
+                            this.correlogramR[c.getRed()][di]++;
+                            this.correlogramG[c.getGreen()][di]++;
+                            this.correlogramB[c.getBlue()][di]++;
                         }
                     }
 
                     for (int dy = (y - d + 1); dy <= ( y + d - 1); dy++) {
                         int dx = x - d;
-                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && img[dy][dx] == c) {
-                            this.correlogram[c][di]++;
+                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && (new Color(image.getRGB(dy, dx)).equals(c))) {
+                            this.correlogramR[c.getRed()][di]++;
+                            this.correlogramG[c.getGreen()][di]++;
+                            this.correlogramB[c.getBlue()][di]++;
                         }
                     }
 
                     for (int dy = (y - d + 1); dy <= ( y + d - 1); dy++) {
                         int dx = x + d;
-                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && img[dy][dx] == c) {
-                            this.correlogram[c][di]++;
+                        if (dx >= 0 && dx < W && dy >= 0 && dy < H && (new Color(image.getRGB(dy, dx)).equals(c))) {
+                            this.correlogramR[c.getRed()][di]++;
+                            this.correlogramG[c.getGreen()][di]++;
+                            this.correlogramB[c.getBlue()][di]++;
                         }
                     }
                 }
             }
 
-            for (int c = 0; c < maxFeatureValue; ++c)
-                if (histogram[c] > 0)
-                    this.correlogram[c][di] = (this.correlogram[c][di] / histogram[c]);
+            for (int i = 0; i < maxFeatureValue; i++)
+                if (histogramR[i] > 0)
+                    this.correlogramR[i][di] = (this.correlogramR[i][di] / histogramR[i]);
+            for (int i = 0; i < maxFeatureValue; i++)
+                if (histogramG[i] > 0)
+                    this.correlogramG[i][di] = (this.correlogramG[i][di] / histogramG[i]);
+            for (int i = 0; i < maxFeatureValue; i++)
+                if (histogramB[i] > 0)
+                    this.correlogramB[i][di] = (this.correlogramB[i][di] / histogramB[i]);
         }
-    }
-
-    private int[][] generateMatrixIntImage(BufferedImage image) {
-        int[][] matrixIntImage = new int[image.getHeight()][image.getWidth()];
-        for (int i = 0; i < image.getHeight(); i++) {
-            for (int j = 0; j < image.getWidth(); j++) {
-                int greyColor = RGBtoGrey(image.getRGB(i, j));
-                matrixIntImage[i][j] = greyColor;
-            }
-        }
-        return matrixIntImage;
-    }
-
-    private int RGBtoGrey(int RGB) {
-        Color c = new Color(RGB);
-        int red = (int)(c.getRed() * 0.299);
-        int green = (int)(c.getGreen() * 0.587);
-        int blue = (int)(c.getBlue() *0.114);
-        int grey = red+green+blue;
-        return grey;
     }
 
     @Override
     public double getDistance(Feature feature) {
         AutocolorCorrelogram autocolorCorrelogram = (AutocolorCorrelogram) feature;
-        float[][] otherCorrelogram = autocolorCorrelogram.getCorrelogram();
-        double distance = 0;
-        for (int i=0; i<otherCorrelogram.length; i++) {
-            for (int j=0; j<otherCorrelogram[0].length; j++) {
-                distance+=(Math.abs(otherCorrelogram[i][j] - this.correlogram[i][j]) / (1 + otherCorrelogram[i][j] + this.correlogram[i][j]));
+        float[][] otherCorrelogramR = autocolorCorrelogram.getCorrelogramR();
+        float[][] otherCorrelogramG = autocolorCorrelogram.getCorrelogramG();
+        float[][] otherCorrelogramB = autocolorCorrelogram.getCorrelogramB();
+        double distanceR = 0;
+        double distanceG = 0;
+        double distanceB = 0;
+        double distance;
+        for (int i=0; i<otherCorrelogramR.length; i++) {
+            for (int j=0; j<otherCorrelogramR[0].length; j++) {
+                distanceR+=(Math.abs(otherCorrelogramR[i][j] - this.correlogramR[i][j]) / (1 + otherCorrelogramR[i][j] + this.correlogramR[i][j]));
             }
         }
+        for (int i=0; i<otherCorrelogramG.length; i++) {
+            for (int j=0; j<otherCorrelogramG[0].length; j++) {
+                distanceG+=(Math.abs(otherCorrelogramG[i][j] - this.correlogramG[i][j]) / (1 + otherCorrelogramG[i][j] + this.correlogramG[i][j]));
+            }
+        }
+        for (int i=0; i<otherCorrelogramB.length; i++) {
+            for (int j=0; j<otherCorrelogramB[0].length; j++) {
+                distanceB+=(Math.abs(otherCorrelogramB[i][j] - this.correlogramB[i][j]) / (1 + otherCorrelogramB[i][j] + this.correlogramB[i][j]));
+            }
+        }
+        distance = (distanceR + distanceG + distanceB) / 3;
         return distance;
     }
 }

@@ -1,7 +1,6 @@
 package model;
 
 import feature.Feature;
-
 import java.awt.image.BufferedImage;
 
 public class BlockAffine {
